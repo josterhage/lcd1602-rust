@@ -10,17 +10,43 @@ module! {
 	license: "GPL",
 }
 
-struct Lcd1602;
+#[pin_data(PinnedDrop)]
+struct Lcd1602 {
+	#[pin]
+	_miscdev: kernel::miscdevice::MiscDeviceRegistration<Lcd1602Device>,
+}
 
-impl kernel::Module for Lcd1602 {
-	fn init(_module: &'static ThisModule) -> Result<Self> {
-		pr_info!("Lcd1602 driver loaded\n");
-		Ok(Lcd1602)
+impl kernel::InPlaceModule for Lcd1602 {
+	fn init(_module: &'static ThisModule) -> impl PinInit<Self, Error> {
+		pr_info!("LCD1602 loaded\n");
+
+		let options = kernel::miscdevice::MiscDeviceOptions {
+			name: kernel::c_str!("lcd"),
+		};
+
+		try_pin_init!(Self {
+			_miscdev <- kernel::miscdevice::MiscDeviceRegistration::register(options),
+		})
 	}
 }
 
-impl Drop for Lcd1602 {
-	fn drop(&mut self) {
-		pr_info!("Lcd1602 driver unloaded\n");
+#[pinned_drop]
+impl PinnedDrop for Lcd1602 {
+	fn drop(self: Pin<&mut Self>) {
+		pr_info!("LCD1602 driver unloaded\n");
+	}
+}
+
+struct Lcd1602Device {}
+
+#[vtable]
+impl kernel::miscdevice::MiscDevice for Lcd1602Device {
+	type Ptr = Pin<KBox<Self>>;
+
+	fn open(
+		_file: &kernel::fs::File,
+		_misc: &kernel::miscdevice::MiscDeviceRegistration<Self>,
+	) -> Result<Pin<KBox<Self>>> {
+		return Err(ENOTTY);
 	}
 }
