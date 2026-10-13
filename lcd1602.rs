@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * lcd1602.rs
+ * 
+ * Copyright (C) 2026 James Osterhage
+ */
+
 //! Driver for a 1602 LCD connected via I2C
 
 use kernel::prelude::*;
